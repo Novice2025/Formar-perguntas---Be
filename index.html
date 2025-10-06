@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Question Builder: Verbo To Be (Inversão Direta)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#1A1A2E',
+                        'card-bg': '#272740',
+                        'be-color': '#9333EA',       /* New color for BE verbs */
+                        'subject-color': '#FBBF24',   
+                        'rest-color': '#34D399',      
+                        'affirmative-color': '#EF4444', 
+                        'highlight-bg': '#1F2937',
+                        'present-color': '#10B981', 
+                        'past-color': '#F59E0B',    
+                    },
+                    keyframes: {
+                        pulse: {
+                            '0%, 100%': { opacity: 1, boxShadow: '0 0 0 0 rgba(147, 51, 234, 0.4)' },
+                            '50%': { opacity: 0.8, boxShadow: '0 0 0 4px rgba(147, 51, 234, 0)' },
+                        }
+                    },
+                    animation: {
+                        pulse: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --dark-bg: #1A1A2E;
+            --card-bg: #272740;
+            --be-color: #9333EA; /* BE verb color */
+            --subject-color: #FBBF24; 
+            --rest-color: #34D399; /* Used for the rest block now */
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: #E2E8F0;
+            font-family: 'Inter', sans-serif;
+            min-height: 10vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Custom block styling */
+        .lego-block {
+            padding: 0.75rem 1.25rem;
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s, opacity 0.3s, box-shadow 0.3s;
+            user-select: none;
+            flex-shrink: 0;
+            border: 2px solid transparent; 
+        }
+        
+        /* Style for draggable=true blocks (ACTIVE) */
+        .lego-block[draggable="true"] {
+            cursor: pointer !important; 
+            opacity: 1; 
+        }
+        .lego-block[draggable="true"]:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+        /* Style for draggable=false blocks (DISABLED) */
+        .lego-block[draggable="false"] {
+            cursor: not-allowed; 
+            opacity: 0.4; 
+        }
+
+        .be-block { background-color: var(--be-color); color: white; }
+        .subject-block { background-color: var(--subject-color); color: #1A1A2E; }
+        .rest-block { background-color: var(--rest-color); color: #1A1A2E; } 
+        
+        /* Slot styling */
+        .target-slot {
+            min-width: 80px;
+            min-height: 70px; 
+            margin: 0.25rem;
+            border: 2px dashed #475569;
+            background-color: #1F2937;
+            border-radius: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, border-color 0.2s;
+            position: relative;
+            padding-top: 20px;
+        }
+        .slot-label {
+            position: absolute;
+            top: 5px;
+            font-size: 0.75rem; 
+            font-weight: 700;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+        .target-slot[data-role="be"] .slot-label { color: var(--be-color); }
+        .target-slot[data-role="subj"] .slot-label { color: var(--subject-color); }
+        .target-slot[data-role="rest"] .slot-label { color: var(--rest-color); }
+        .target-slot[data-role="punct"] .slot-label { color: #6B7280; }
+        
+        /* Focus styles */
+        .target-slot.active {
+            border-color: var(--be-color);
+            background-color: #1F2937;
+        }
+
+        .target-slot > .lego-block {
+            margin: 0;
+            box-shadow: none;
+            cursor: default;
+        }
+        
+        .scrambled-words {
+            min-height: 100px;
+            border: 3px solid #4B5563;
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feedback.success { background-color: #166534; color: white; }
+        .feedback.error { background-color: #991B1B; color: white; }
+
+        .pulse-active {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @media (max-width: 640px) {
+            .hero-title { font-size: 2rem; }
+            .main-content { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header (Optimized for Struggling Students) -->
+    <header class="text-center mb-10">
+        <h1 class="hero-title text-4xl md:text-5xl font-extrabold text-white mb-2">
+            LEGO DA PERGUNTA: O Verbo To Be (Am/Is/Are, Was/Were)
+        </h1>
+        <p class="text-lg text-gray-400">
+            Foco na **Troca Simples**! Vamos montar a frase **palavra por palavra** para consolidar a ordem.
+        </p>
+        <div class="mt-4 p-3 bg-be-color/50 border-l-4 border-be-color rounded-lg inline-block mx-auto max-w-lg">
+            <p class="text-sm md:text-base font-bold text-white">
+                👑 **REGRA DO CHEFE:** O Verbo To Be é o **SUPER AUXILIAR** do inglês! <br><br>
+                <span class="text-white bg-be-color px-2 py-1 rounded">É MUITO FÁCIL:</span> Se o To Be (Am, Is, Are, Was, Were) já está na frase, ele é o chefe e faz a pergunta **SOZINHO**. Você só precisa **trocar** o To Be de lugar com o Sujeito. **NUNCA** use DO, DOES ou DID com ele!
+            </p>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto w-full grid gap-8 grid-cols-1 lg:grid-cols-3 main-content">
+
+        <!-- Left Column: Instructions -->
+        <div class="lg:col-span-1 space-y-8">
+            <div class="rule-card p-6 rounded-xl shadow-lg border-2 border-gray-600">
+                <p class="text-xl font-extrabold flex items-center mb-3 text-white"><span class="text-3xl font-black mr-2 text-gray-600">★</span> FÓRMULA DE OURO: A REGRA DA TROCA SIMPLES</p>
+                <div class="rule-box mb-4 bg-gray-900">
+                    <p class="text-sm text-gray-400 mb-2">A ordem correta para perguntas com o Verbo To Be:</p>
+                    <div class="flex flex-wrap items-center text-base font-bold justify-center md:justify-start">
+                        <div class="lego-block be-block">1. TO BE</div>
+                        <span class="text-xl mx-1 font-black text-gray-500">→</span>
+                        <div class="lego-block subject-block">2. SUBJECT</div>
+                        <span class="text-xl mx-1 font-black text-gray-500">→</span>
+                        <div class="lego-block rest-block">3+. RESTO?</div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-3xl font-extrabold text-white border-b pb-2 border-gray-600 mt-8">SELECIONE PARA PRATICAR:</h2>
+            <div class="rule-card p-6 rounded-xl shadow-lg present-module space-y-4">
+                <h3 class="font-bold text-xl text-present-color">PRESENTE: <span class="text-white">AM / IS / ARE</span></h3>
+                <div id="be-selector-present" class="flex flex-wrap gap-3">
+                    <button data-be="am" class="p-3 rounded-lg font-bold text-sm bg-gray-700 hover:bg-present-color transition-colors">AM (I)</button>
+                    <button data-be="is" class="p-3 rounded-lg font-bold text-sm bg-gray-700 hover:bg-present-color transition-colors">IS (He/She/It)</button>
+                    <button data-be="are" class="p-3 rounded-lg font-bold text-sm bg-gray-700 hover:bg-present-color transition-colors">ARE (You/We/They)</button>
+                </div>
+            </div>
+            
+            <div class="rule-card p-6 rounded-xl shadow-lg past-module space-y-4">
+                <h3 class="font-bold text-xl text-past-color">PASSADO: <span class="text-white">WAS / WERE</span></h3>
+                <div id="be-selector-past" class="flex flex-wrap gap-3">
+                    <button data-be="was" class="p-3 rounded-lg font-bold text-sm bg-gray-700 hover:bg-past-color transition-colors">WAS (I/He/She/It)</button>
+                    <button data-be="were" class="p-3 rounded-lg font-bold text-sm bg-gray-700 hover:bg-past-color transition-colors">WERE (You/We/They)</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Interactive Practice (Main Area) -->
+        <div class="lg:col-span-2" id="practice-target-area">
+            <div class="bg-card-bg p-8 rounded-xl shadow-2xl min-h-[500px]">
+                <h2 class="text-3xl font-bold text-be-color mb-4">Área de Montagem: Inversão do Verbo TO BE (Palavra por Palavra)</h2>
+                
+                <p class="text-lg font-semibold mb-2 mt-6">Frase Afirmativa (O Ponto de Partida):</p>
+                <div id="affirmative-sentence" class="p-4 rounded-lg text-xl font-semibold bg-gray-700 text-white mb-6">
+                    Clique em um Formulário BE acima (<span class="text-present-color">AM/IS/ARE</span> ou <span class="text-past-color">WAS/WERE</span>) para começar a sequência guiada.
+                </div>
+                
+                <p class="text-lg font-semibold mb-2 mt-6">
+                    Monte a Pergunta (Passo a Passo - Slot Ativo Pulsa!): 
+                    <span class="text-yellow-400 font-bold ml-2">(Clique ou Arraste o bloco pulsante!)</span>
+                </p>
+                <div id="sentence-input-area" class="sentence-input-area flex flex-wrap mb-6">
+                    <!-- Target slots will be generated here -->
+                </div>
+
+                <p class="text-lg font-semibold mb-2 mt-6">Arraste/Clique nos Blocos (Lego Misturado):</p>
+                <div id="scrambled-words" class="scrambled-words mb-6">
+                    <!-- Scrambled word blocks will be generated here -->
+                </div>
+
+                <div class="flex flex-wrap gap-4">
+                    <button id="check-button" class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 transition-colors disabled:opacity-50" disabled>
+                        Verificar Resposta Final
+                    </button>
+                    <button id="next-button" class="px-6 py-3 bg-be-color text-white font-bold rounded-lg shadow-md hover:bg-purple-700 transition-colors disabled:opacity-50" disabled>
+                        Próxima Pergunta
+                    </button>
+                </div>
+
+                <div id="feedback" class="feedback hidden"></div>
+                <div id="solution" class="mt-4 p-4 bg-gray-700 rounded-lg hidden">
+                    <p class="font-bold text-sm text-gray-300 mb-2">Solução Correta:</p>
+                    <p id="solution-text" class="text-xl font-bold text-rest-color"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-10 text-center text-sm text-gray-600">
+        Pratique a estrutura: TO BE + SUBJECT + RESTO.
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        // --- Firebase Initialization (Boilerplate) ---
+        const initializeFirebase = async (callback) => {
+            try {
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+                if (firebaseConfig) {
+                    const app = initializeApp(firebaseConfig);
+                    const auth = getAuth(app);
+
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                }
+            } catch (error) {
+                console.error("Firebase init error (non-critical for this app):", error);
+            }
+            if (callback) callback();
+        };
+
+        // --- APPLICATION DATA (Verbo To Be) ---
+        const sentenceData = {
+            // Present Tense: Am/Is/Are
+            am: [
+                { statement: "I am ready.", subj: "I", be: "am", rest: "ready.", fullQuestion: "Am I ready?" },
+            ],
+            is: [
+                { statement: "He is a student.", subj: "He", be: "is", rest: "a student.", fullQuestion: "Is he a student?" },
+                { statement: "She is calling her friend.", subj: "She", be: "is", rest: "calling her friend.", fullQuestion: "Is she calling her friend?" },
+                { statement: "The book is interesting.", subj: "The book", be: "is", rest: "interesting.", fullQuestion: "Is the book interesting?" },
+            ],
+            are: [
+                { statement: "You are late for the meeting.", subj: "You", be: "are", rest: "late for the meeting.", fullQuestion: "Are you late for the meeting?" },
+                { statement: "We are at home.", subj: "We", be: "are", rest: "at home.", fullQuestion: "Are we at home?" },
+                { statement: "They are learning English now.", subj: "They", be: "are", rest: "learning English now.", fullQuestion: "Are they learning English now?" },
+            ],
+            // Past Tense: Was/Were
+            was: [
+                { statement: "I was tired yesterday.", subj: "I", be: "was", rest: "tired yesterday.", fullQuestion: "Was I tired yesterday?" },
+                { statement: "He was sick all week.", subj: "He", be: "was", rest: "sick all week.", fullQuestion: "Was he sick all week?" },
+            ],
+            were: [
+                { statement: "You were busy with the project.", subj: "You", be: "were", rest: "busy with the project.", fullQuestion: "Were you busy with the project?" },
+                { statement: "They were happy at the party.", subj: "They", be: "were", rest: "happy at the party.", fullQuestion: "Were they happy at the party?" },
+            ]
+        };
+
+        let currentBeForm = null;
+        let currentQuestionIndex = -1;
+        let currentWords = []; 
+        let nextSlotIndex = 0; 
+
+        // DOM Elements
+        const affSentence = document.getElementById('affirmative-sentence');
+        const sentenceInputArea = document.getElementById('sentence-input-area');
+        const scrambledWordsDiv = document.getElementById('scrambled-words');
+        const checkButton = document.getElementById('check-button');
+        const nextButton = document.getElementById('next-button');
+        const feedbackDiv = document.getElementById('feedback');
+        const solutionDiv = document.getElementById('solution');
+        const solutionText = document.getElementById('solution-text');
+        const practiceTargetArea = document.getElementById('practice-target-area');
+        
+        // --- Core Action: Moving a block from source to target ---
+        function moveBlockToSlot(draggedBlock) {
+             const slotIndex = nextSlotIndex;
+             const targetSlot = sentenceInputArea.querySelector(`.target-slot[data-slot-index="${slotIndex}"]`);
+
+             if (parseInt(draggedBlock.dataset.correctIndex) !== nextSlotIndex) {
+                 return;
+             }
+
+             if (!targetSlot || targetSlot.querySelector('.lego-block')) return;
+
+             // 1. Clean up visual cues
+             targetSlot.classList.remove('active', 'pulse-active', 'border-be-color');
+             feedbackDiv.classList.add('hidden'); 
+             
+             // 2. Move block
+             draggedBlock.setAttribute('draggable', 'false'); 
+             draggedBlock.classList.remove('pulse-active'); 
+             targetSlot.appendChild(draggedBlock);
+
+             // 3. Advance state
+             nextSlotIndex++;
+             updateActiveSlot();
+             
+             // 4. Final check
+             if (nextSlotIndex >= currentWords.length) {
+                 checkButton.disabled = false;
+                 scrambledWordsDiv.innerHTML = '<p class="text-lg text-gray-400">Todos os blocos estão nos seus lugares! Verifique sua resposta final.</p>';
+             }
+        }
+
+        // --- Drag and Drop Handlers ---
+        
+        function handleDragStart(e) {
+            const draggedBlock = e.target;
+            
+            if (draggedBlock.getAttribute('draggable') === 'true') {
+                e.dataTransfer.setData('text/plain', draggedBlock.dataset.correctIndex); 
+                e.dataTransfer.effectAllowed = 'move';
+                draggedBlock.classList.add('ring-4', 'ring-purple-500', 'opacity-50'); 
+                
+                const currentActiveSlot = sentenceInputArea.querySelector(`.target-slot[data-slot-index="${nextSlotIndex}"]`);
+                if (currentActiveSlot) {
+                     currentActiveSlot.classList.remove('pulse-active');
+                }
+            } else {
+                 e.preventDefault(); 
+            }
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('ring-4', 'ring-purple-500', 'opacity-50');
+            
+            if (e.target.parentNode === scrambledWordsDiv) {
+                const currentActiveSlot = sentenceInputArea.querySelector(`.target-slot[data-slot-index="${nextSlotIndex}"]`);
+                if (currentActiveSlot) {
+                    currentActiveSlot.classList.add('pulse-active');
+                }
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); 
+            const slot = e.currentTarget;
+            const slotIndex = parseInt(slot.dataset.slotIndex);
+            
+            if (slotIndex === nextSlotIndex && !slot.querySelector('.lego-block')) {
+                e.dataTransfer.dropEffect = 'move';
+                slot.classList.add('active', 'border-purple-300'); 
+            } else {
+                e.dataTransfer.dropEffect = 'none';
+                slot.classList.remove('active', 'border-purple-300');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('active', 'border-purple-300');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const slot = e.currentTarget;
+            const slotIndex = parseInt(slot.dataset.slotIndex);
+
+            if (slotIndex !== nextSlotIndex || slot.querySelector('.lego-block')) {
+                 slot.classList.add('pulse-active'); 
+                 return;
+            } 
+
+            const draggedIndex = e.dataTransfer.getData('text/plain');
+            const draggedBlock = scrambledWordsDiv.querySelector(`.lego-block[data-correct-index='${draggedIndex}']`);
+            
+            if (draggedBlock) {
+                moveBlockToSlot(draggedBlock);
+            }
+        }
+
+        // --- Click/Tap Handler (Robust Fallback) ---
+        function handleBlockClick(e) {
+            const clickedBlock = e.currentTarget;
+            const blockIndex = parseInt(clickedBlock.dataset.correctIndex);
+            
+            if (blockIndex === nextSlotIndex) {
+                 moveBlockToSlot(clickedBlock);
+            }
+        }
+
+
+        function updateActiveSlot() {
+            // Deactivate all slots visual focus
+            sentenceInputArea.querySelectorAll('.target-slot').forEach(slot => {
+                slot.classList.remove('active', 'pulse-active');
+                // Re-attach D&D listeners for safety
+                slot.addEventListener('drop', handleDrop);
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('dragleave', handleDragLeave);
+            });
+
+            // Deactivate ALL scrambled blocks visually and functionally first
+            document.querySelectorAll('#scrambled-words .lego-block').forEach(block => {
+                block.setAttribute('draggable', 'false'); 
+                block.classList.remove('pulse-active'); 
+            });
+
+
+            if (nextSlotIndex < currentWords.length) {
+                const nextSlot = sentenceInputArea.querySelector(`.target-slot[data-slot-index="${nextSlotIndex}"]`);
+                if (nextSlot) {
+                    // Activate the next required slot and make it pulse
+                    nextSlot.classList.add('active', 'pulse-active');
+                    
+                    const requiredBlock = scrambledWordsDiv.querySelector(`.lego-block[data-correct-index="${nextSlotIndex}"]`);
+                    
+                    if (requiredBlock) {
+                        requiredBlock.setAttribute('draggable', 'true'); 
+                        requiredBlock.classList.add('pulse-active');
+                    }
+                }
+            } else {
+                 // All slots filled
+                 document.querySelectorAll('.lego-block').forEach(block => block.setAttribute('draggable', 'false'));
+            }
+        }
+        
+        // --- Question Generation ---
+        
+        function tokenizeSentence(item) {
+            let tokens = [];
+            // 0. TO BE Form (Capitalized for start of sentence)
+            tokens.push(item.be.charAt(0).toUpperCase() + item.be.slice(1)); 
+            // 1. SUBJECT
+            tokens.push(item.subj); 
+            
+            // 2. REST (Split into individual words)
+            // Remove punctuation at the end and trim
+            const restClean = item.rest.replace(/[\.\?]$/, '').trim(); 
+            if (restClean) {
+                // Split by spaces. This will break "a student" into ["a", "student"]
+                const restWords = restClean.split(/\s+/);
+                tokens.push(...restWords); // Spread the words into the token array
+            }
+
+            // N. PUNCTUATION
+            tokens.push("?"); 
+            return tokens;
+        }
+
+
+        function generatePractice(beForm) {
+            const questions = sentenceData[beForm];
+            if (!questions || questions.length === 0) return;
+
+            currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+            const item = questions[currentQuestionIndex];
+            
+            currentWords = tokenizeSentence(item);
+            nextSlotIndex = 0; 
+
+            // 1. Display Affirmative Sentence (using lowercased BE form for statement)
+            affSentence.innerHTML = `
+                <div class="affirmative-blocks flex flex-wrap gap-2">
+                    <div class="lego-block subject-block">${item.subj}</div>
+                    <div class="lego-block be-block">${item.be.toLowerCase()}</div>
+                    <div class="lego-block rest-block">${item.rest}</div>
+                </div>
+            `;
+            affSentence.classList.add('bg-affirmative-color');
+            affSentence.classList.remove('bg-gray-700');
+            
+            // 2. Clear areas
+            sentenceInputArea.innerHTML = '';
+            scrambledWordsDiv.innerHTML = '';
+            feedbackDiv.classList.add('hidden');
+            solutionDiv.classList.add('hidden');
+            checkButton.disabled = true;
+            nextButton.disabled = true;
+
+            // 3. Create target slots with labels (Dynamic number of slots)
+            currentWords.forEach((word, index) => {
+                const slot = document.createElement('div');
+                let role, label;
+
+                if (index === 0) { 
+                    role = 'be'; label = '1. TO BE'; 
+                } else if (index === 1) { 
+                    role = 'subj'; label = '2. SUJEITO'; 
+                } else if (index === currentWords.length - 1) { 
+                    role = 'punct'; label = 'PONTO (?)'; 
+                } else {
+                    role = 'rest'; label = 'RESTO'; 
+                }
+
+
+                slot.className = 'target-slot text-sm flex-grow'; 
+                slot.dataset.slotIndex = index;
+                slot.dataset.role = role;
+                
+                const labelElement = document.createElement('span');
+                labelElement.className = 'slot-label';
+                labelElement.textContent = label;
+                
+                slot.appendChild(labelElement);
+                sentenceInputArea.appendChild(slot);
+            });
+
+            // 4. Create scrambled word blocks (Dynamic colors based on position)
+            const blocksToShuffle = currentWords.map((word, index) => ({ word, correctIndex: index }));
+            blocksToShuffle.sort(() => Math.random() - 0.5);
+
+            blocksToShuffle.forEach((item) => {
+                const block = document.createElement('div');
+                let className;
+                
+                if (item.correctIndex === 0) {
+                    className = 'be-block'; // TO BE
+                } else if (item.correctIndex === 1) {
+                    className = 'subject-block'; // SUBJECT
+                } else if (item.correctIndex === currentWords.length - 1) {
+                    className = 'bg-gray-700 text-white'; // Punctuation
+                } else { 
+                    className = 'rest-block'; // RESTO (every other word)
+                }
+
+
+                block.className = `lego-block ${className}`;
+                block.textContent = item.word;
+                block.dataset.correctIndex = item.correctIndex; 
+                block.setAttribute('draggable', 'false'); 
+                
+                block.addEventListener('dragstart', handleDragStart);
+                block.addEventListener('dragend', handleDragEnd);
+                block.addEventListener('click', handleBlockClick); 
+                
+                scrambledWordsDiv.appendChild(block);
+            });
+            
+            updateActiveSlot();
+
+            practiceTargetArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // --- Verification and Feedback ---
+
+        function checkAnswer() {
+            let userAnswerWords = [];
+            sentenceInputArea.querySelectorAll('.target-slot').forEach(slot => {
+                const block = slot.querySelector('.lego-block');
+                if (block) {
+                    userAnswerWords.push(block.textContent.trim());
+                }
+            });
+
+            // Correctly join the array back into a sentence string (handling the space before '?')
+            const userAnswer = userAnswerWords.join(' ').replace(/\s+\?$/, '?').trim();
+            const correctSentence = currentWords.join(' ').replace(/\s+\?$/, '?').trim();
+            
+            if (userAnswer === correctSentence) {
+                feedbackDiv.textContent = `🎉 EXCELENTE! Você acertou a regra mais importante: **A Troca Simples!** (To Be + Sujeito + Resto?)`;
+                feedbackDiv.className = 'feedback success';
+                nextButton.disabled = false;
+                checkButton.disabled = true;
+            } else {
+                feedbackDiv.textContent = `❌ OPS! Reveja a regra da Troca Simples: O **Verbo To Be** (Am, Is, Are, Was, Were) SEMPRE vem primeiro na pergunta.`;
+                feedbackDiv.className = 'feedback error';
+                nextButton.disabled = true;
+                
+                solutionDiv.classList.remove('hidden');
+                solutionText.textContent = correctSentence;
+            }
+            feedbackDiv.classList.remove('hidden');
+        }
+        
+        // --- Initialization Function ---
+        const initApp = () => {
+            document.querySelectorAll('button[data-be]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const beForm = e.currentTarget.dataset.be; 
+                    
+                    document.querySelectorAll('button[data-be]').forEach(btn => {
+                        btn.classList.remove('bg-present-color', 'bg-past-color', 'text-white');
+                        btn.classList.add('bg-gray-700');
+                    });
+                    
+                    e.currentTarget.classList.remove('bg-gray-700');
+                    e.currentTarget.classList.add('text-white');
+                    if (beForm === 'was' || beForm === 'were') {
+                        e.currentTarget.classList.add('bg-past-color');
+                    } else {
+                        e.currentTarget.classList.add('bg-present-color');
+                    }
+
+                    if (beForm) {
+                        if (currentBeForm !== beForm) {
+                            currentQuestionIndex = -1;
+                            currentBeForm = beForm;
+                        }
+                        
+                        generatePractice(beForm);
+                    }
+                });
+            });
+
+            checkButton.addEventListener('click', checkAnswer);
+            
+            nextButton.addEventListener('click', () => {
+                if (currentBeForm) {
+                    generatePractice(currentBeForm);
+                }
+            });
+        };
+
+        window.onload = () => initializeFirebase(initApp);
+
+    </script>
+</body>
+</html>
